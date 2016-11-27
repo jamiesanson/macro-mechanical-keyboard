@@ -1,0 +1,37 @@
+--------------------------------------------------------------------------------
+        Reprogrammable macro keyboard Domain Specific Language (DSL):
+--------------------------------------------------------------------------------
+
+Requirements:
+  - Must be as compact as possible so as to
+    1. Not take up very much memory on the microcontroller
+    2. Easily formable on the frontend
+  - Technically:
+    - Must be able to use all HID characters
+    - Perform presses with varying duration between each
+    - Hold down one or more keys and allow others to be pressed whilst held down
+
+
+Possible layouts:
+
+_$0.5C0.5V$_
+
+The above could potentially be parsed as holding down control, and then pressing
+C, followed by V 0.5 seconds later. In this set up, lifting and pressing of
+the control key are two separate actions, and all numerical values correspond to
+time delays. This isn't ideal, as it means you can't use numbers as macros.
+
+Delays could be preceded by a special character, or could be hardcoded time delays
+of 0.5 seconds or shorter, which are then represented in a similar manner to how
+the CTRL character is being represented above. This would give:
+
+_$_t0.5C_t0.5V$_
+
+Where _t denotes a delay, and 0.5 is the duration. There is still an issue where
+numerical characters coming after this will be treated as part of a delay. An
+alternative to this could be closing characters as seen with the CTRL key
+
+_$_t0.5t_C_t0.5t_V$_
+
+With this method, the underscores serve as separators for each command (mostly)
+so gives a fairly human readable representation of the macro.
