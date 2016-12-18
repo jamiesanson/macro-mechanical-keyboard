@@ -6,11 +6,15 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
+#ifndef ButtonHandler_H
+#define ButtonHandler_H
+
 // Length of buffer containing current events
 #define EVENT_BUFFER_LENGTH 50
 
-// Defining event types for button presses, where up and down correspond to hold events,
-// and press is a single item
+#define BUTTON_DEBOUNCE_INTERVAL_MILLIS 75
+
+// Defining event types for button presses, where up correspond to hold events
 PROGMEM enum ButtonEventType 
 {   
     UNKNOWN,
@@ -34,16 +38,57 @@ struct ButtonEvent
     ButtonEventType pressType;
 };
 
+// Struct holding config information, i.e button pins and modes
+struct ButtonConfig
+{
+    // Defines maximum amount of buttons able to be used, which is required
+    // due to the use of fixed ISRs for each button event
+    static const PROGMEM int MAX_BUTTONS = 6;
+
+    int buttonPins[MAX_BUTTONS];
+    ButtonMode buttonModes[MAX_BUTTONS];
+};
+
+// Global function pointer typedefs
+typedef void (*Isr)(void);
+typedef void (*EventListener)(ButtonEvent event);
 
 class ButtonHandler 
 {
+
     public:
         // Constructor
-        ButtonHandler(ButtonMode * modes);
+        ButtonHandler(ButtonConfig config);
 
-        // Returns a pointer to the current event to process, where the event contains {-1, UNKNOWN}
-        // if there is no current event
-        ButtonEvent getCurrent();
+        // Notified queue that the previously emitted event has been processed and that it should 
+        // emit the next item in the queue if available
+        void eventComplete();
+
+        // Public reference to current config
+        ButtonConfig _config;
+
+        // For setting pointer to listener
+        void setListener(EventListener listener);
+
+        // ISR definitions. Have to be public to allow passing of pointer to non-member functions
+        // to attachInterrupt call
+        void onKeyOneDown();
+        void onKeyOneUp();
+        
+        void onKeyTwoDown();
+        void onKeyTwoUp();
+
+        void onKeyThreeDown();
+        void onKeyThreeUp();
+
+        void onKeyFourDown();
+        void onKeyFourUp();
+
+        void onKeyFiveDown();
+        void onKeyFiveUp();
+
+        void onKeySixDown();
+        void onKeySixUp();
 
     private:  
         // Buffer of events, maintains a queue-like implementation when items are added or removed
@@ -51,10 +96,44 @@ class ButtonHandler
         // For queue implementation
         int _lastIndex = 0; 
 
+        // Used for maintaining information about whether the main sketch has finished processing the last 
+        // emitted event
+        boolean _processingComplete = true;
+
+        // listener for new events to be emitted to
+        EventListener _listener;
+
         // Does as the name implies
         boolean isEventsEmpty();
         
         // Shifts item indices in the buffer such that the first item is the current action
         void resizeEvents();
+
+        // Adds event to queue
+        void addEvent(ButtonEvent event);
+
+        // Returns pointer to ISR function
+        Isr getISR(int buttonIndex, boolean isRising);
+
+        // Used for debouncing interrupts
+        elapsedMillis _buttonTimeout;
 };
 
+// Extern as defined globally in c++ implementation file
+extern ButtonHandler * _buttonHandler;
+
+// A sad hack to allow access to member functions from a global scope
+inline void keyOneDown() { _buttonHandler->onKeyOneDown(); }
+inline void keyOneUp() { _buttonHandler->onKeyOneUp(); }
+inline void keyTwoDown() { _buttonHandler->onKeyTwoDown(); }
+inline void keyTwoUp() { _buttonHandler->onKeyTwoUp(); }
+inline void keyThreeDown() { _buttonHandler->onKeyThreeDown(); }
+inline void keyThreeUp() { _buttonHandler->onKeyThreeUp(); }
+inline void keyFourDown() { _buttonHandler->onKeyFourDown(); }
+inline void keyFourUp() { _buttonHandler->onKeyFourUp(); }
+inline void keyFiveDown() { _buttonHandler->onKeyFiveDown(); }
+inline void keyFiveUp() { _buttonHandler->onKeyFiveUp(); }
+inline void keySixDown() { _buttonHandler->onKeySixDown(); }
+inline void keySixUp() { _buttonHandler->onKeySixUp(); }
+
+#endif
