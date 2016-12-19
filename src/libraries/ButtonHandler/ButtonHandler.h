@@ -14,6 +14,8 @@
 
 #define BUTTON_DEBOUNCE_INTERVAL_MILLIS 75
 
+#define SUPPRESS_UNUSED(param) (void)param 
+
 // Defining event types for button presses, where up correspond to hold events
 PROGMEM enum ButtonEventType 
 {   
@@ -51,6 +53,23 @@ struct ButtonConfig
     int buttonPins[MAX_BUTTONS];
     ButtonMode buttonModes[MAX_BUTTONS];
 };
+
+// static function for getting a String describing the enum constant
+const static String getEventTypeName(ButtonEventType type) {
+    SUPPRESS_UNUSED(getEventTypeName);
+
+    switch (type) {
+        case BUTTON_DOWN:
+            return "BUTTON_DOWN";
+        case BUTTON_UP:
+            return "BUTTON_UP";
+        case BUTTON_PRESS:
+            return "BUTTON_PRESS";
+        case UNKNOWN:
+        default:
+            return "UNKNOWN";
+    }
+}
 
 // Global function pointer typedefs
 typedef void (*Isr)(void);
