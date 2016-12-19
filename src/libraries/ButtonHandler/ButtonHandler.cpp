@@ -10,16 +10,20 @@ ButtonHandler::ButtonHandler(ButtonConfig config) : _config(config)
     _buttonHandler = this;
 
     for (int i = 0; i < ButtonConfig::MAX_BUTTONS; i++) 
-    {
-        pinMode(_config.buttonPins[i], INPUT);
-        attachInterrupt(_config.buttonPins[i], getISR(i, true), RISING);
+    {   
+        if (_config.buttonModes[i] != DISCONNECTED) {
+            pinMode(_config.buttonPins[i], INPUT);
+            attachInterrupt(_config.buttonPins[i], getISR(i), RISING);
 
-        if (config.buttonModes[i] == MODIFIER) {
-            attachInterrupt(_config.buttonPins[i], getISR(i, false), FALLING);
+            // Only attach falling edge interrupts for those keys we care about holding down, i.e modifiers
+            if (config.buttonModes[i] == MODIFIER) {
+                attachInterrupt(_config.buttonPins[i], getISR(i), FALLING);
+            }
         }
     }
 }
 
+// Setting the callback function used to emit events to
 void ButtonHandler::setListener(EventListener listener) {
     _listener = listener;
 }
@@ -59,6 +63,10 @@ void ButtonHandler::resizeEvents()
 void ButtonHandler::addEvent(ButtonEvent event) {
     if (_lastIndex < EVENT_BUFFER_LENGTH && _buttonTimeout > BUTTON_DEBOUNCE_INTERVAL_MILLIS) {
         noInterrupts();
+        
+        // Invert pressed state after debouncing
+        _buttonStatePressed[event.number-1] = !_buttonStatePressed[event.number-1];
+
         if (_processingComplete && isEventsEmpty()) {
             _processingComplete = false;
             _listener(event);
@@ -71,95 +79,64 @@ void ButtonHandler::addEvent(ButtonEvent event) {
 }
 
 // Region ISR implementation
-void ButtonHandler::onKeyOneUp()
+void ButtonHandler::onKeyOneEvent()
 {   
-    addEvent((ButtonEvent) {1, BUTTON_UP});
-    _buttonTimeout = 0;
+    addEventForButtonNumber(1);
 }
 
-void ButtonHandler::onKeyOneDown()
-{
-    addEvent((ButtonEvent) {1, _config.buttonModes[0] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
+void ButtonHandler::onKeyTwoEvent()
+{   
+    addEventForButtonNumber(2);
 }
 
-void ButtonHandler::onKeyTwoUp()
-{
-    addEvent((ButtonEvent) {2, BUTTON_UP});
-    _buttonTimeout = 0;
+void ButtonHandler::onKeyThreeEvent()
+{   
+    addEventForButtonNumber(3);
 }
 
-void ButtonHandler::onKeyTwoDown()
-{
-    addEvent((ButtonEvent) {2, _config.buttonModes[1] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
+void ButtonHandler::onKeyFourEvent()
+{   
+    addEventForButtonNumber(4);
 }
 
-void ButtonHandler::onKeyThreeUp()
-{
-    addEvent((ButtonEvent) {3, BUTTON_UP});
-    _buttonTimeout = 0;
+void ButtonHandler::onKeyFiveEvent()
+{   
+    addEventForButtonNumber(5);
 }
 
-void ButtonHandler::onKeyThreeDown()
-{
-    addEvent((ButtonEvent) {3, _config.buttonModes[2] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeyFourUp()
-{
-    addEvent((ButtonEvent) {4, BUTTON_UP});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeyFourDown()
-{
-    addEvent((ButtonEvent) {4, _config.buttonModes[3] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeyFiveUp()
-{
-    addEvent((ButtonEvent) {5, BUTTON_UP});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeyFiveDown()
-{
-    addEvent((ButtonEvent) {5, _config.buttonModes[4] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeySixUp()
-{
-    addEvent((ButtonEvent) {6, BUTTON_UP});
-    _buttonTimeout = 0;
-}
-
-void ButtonHandler::onKeySixDown()
-{
-    addEvent((ButtonEvent) {6, _config.buttonModes[5] == STANDARD ? BUTTON_PRESS : BUTTON_DOWN});
-    _buttonTimeout = 0;
+void ButtonHandler::onKeySixEvent()
+{   
+    addEventForButtonNumber(6);
 }
 // End region
 
+void ButtonHandler::addEventForButtonNumber(int number)
+{
+    if (_config.buttonModes[number-1] == MODIFIER) {
+        addEvent((ButtonEvent) {number, _buttonStatePressed[number-1] ? BUTTON_UP : BUTTON_DOWN});
+    } else {        
+        addEvent((ButtonEvent) {number, BUTTON_PRESS});
+    }
+
+    _buttonTimeout = 0;
+}
+
 // Upsetting spaghetti code to get a pointer to the ISR relating to the index of the button being initialised
-Isr ButtonHandler::getISR(int buttonNumber, boolean isRising)
+Isr ButtonHandler::getISR(int buttonNumber)
 {
     switch (buttonNumber) {
         case 0:
-            return isRising ? keyOneDown : keyOneUp;
+            return keyOneAction;
         case 1:
-            return isRising ? keyTwoDown : keyTwoUp;
+            return keyTwoAction;
         case 2:
-            return isRising ? keyThreeDown : keyThreeUp;
+            return keyThreeAction;
         case 3:
-            return isRising ? keyFourDown : keyFourUp;
+            return keyFourAction; 
         case 4:
-            return isRising ? keyFiveDown : keyFiveUp;
+            return keyFiveAction; 
         case 5:
-            return isRising ? keySixDown : keySixUp;
+            return keySixAction;
     }
 
     return NULL;

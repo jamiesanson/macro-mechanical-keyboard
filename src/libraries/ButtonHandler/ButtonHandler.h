@@ -25,10 +25,13 @@ PROGMEM enum ButtonEventType
 
 // Defines modes for which buttons can be initialised to. STANDARD only considers single press
 // events, whereas MODIFIER considers both down, and up press action
+//
+// DISCONNECTED used for debugging to avoid unwanted events
 PROGMEM enum ButtonMode
 {
     STANDARD,
-    MODIFIER
+    MODIFIER,
+    DISCONNECTED
 };
 
 // Struct for maintaining information regarding button events
@@ -72,23 +75,12 @@ class ButtonHandler
 
         // ISR definitions. Have to be public to allow passing of pointer to non-member functions
         // to attachInterrupt call
-        void onKeyOneDown();
-        void onKeyOneUp();
-        
-        void onKeyTwoDown();
-        void onKeyTwoUp();
-
-        void onKeyThreeDown();
-        void onKeyThreeUp();
-
-        void onKeyFourDown();
-        void onKeyFourUp();
-
-        void onKeyFiveDown();
-        void onKeyFiveUp();
-
-        void onKeySixDown();
-        void onKeySixUp();
+        void onKeyOneEvent();        
+        void onKeyTwoEvent();
+        void onKeyThreeEvent();
+        void onKeyFourEvent();
+        void onKeyFiveEvent();
+        void onKeySixEvent();
 
     private:  
         // Buffer of events, maintains a queue-like implementation when items are added or removed
@@ -111,29 +103,27 @@ class ButtonHandler
 
         // Adds event to queue
         void addEvent(ButtonEvent event);
+        void addEventForButtonNumber(int buttonNumber);
 
         // Returns pointer to ISR function
-        Isr getISR(int buttonIndex, boolean isRising);
+        Isr getISR(int buttonIndex);
 
         // Used for debouncing interrupts
         elapsedMillis _buttonTimeout;
+
+        // For modifier key states, true is pressed, false is open
+        boolean _buttonStatePressed[ButtonConfig::MAX_BUTTONS];
 };
 
 // Extern as defined globally in c++ implementation file
 extern ButtonHandler * _buttonHandler;
 
 // A sad hack to allow access to member functions from a global scope
-inline void keyOneDown() { _buttonHandler->onKeyOneDown(); }
-inline void keyOneUp() { _buttonHandler->onKeyOneUp(); }
-inline void keyTwoDown() { _buttonHandler->onKeyTwoDown(); }
-inline void keyTwoUp() { _buttonHandler->onKeyTwoUp(); }
-inline void keyThreeDown() { _buttonHandler->onKeyThreeDown(); }
-inline void keyThreeUp() { _buttonHandler->onKeyThreeUp(); }
-inline void keyFourDown() { _buttonHandler->onKeyFourDown(); }
-inline void keyFourUp() { _buttonHandler->onKeyFourUp(); }
-inline void keyFiveDown() { _buttonHandler->onKeyFiveDown(); }
-inline void keyFiveUp() { _buttonHandler->onKeyFiveUp(); }
-inline void keySixDown() { _buttonHandler->onKeySixDown(); }
-inline void keySixUp() { _buttonHandler->onKeySixUp(); }
+inline void keyOneAction() { _buttonHandler->onKeyOneEvent(); }
+inline void keyTwoAction() { _buttonHandler->onKeyTwoEvent(); }
+inline void keyThreeAction() { _buttonHandler->onKeyThreeEvent(); }
+inline void keyFourAction() { _buttonHandler->onKeyFourEvent(); }
+inline void keyFiveAction() { _buttonHandler->onKeyFiveEvent(); }
+inline void keySixAction() { _buttonHandler->onKeySixEvent(); }
 
 #endif
