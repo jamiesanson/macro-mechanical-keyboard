@@ -5,6 +5,7 @@
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
+#include <functional>
 
 #ifndef ButtonHandler_H
 #define ButtonHandler_H
@@ -47,7 +48,8 @@ struct ButtonEvent
 struct ButtonConfig
 {
     // Defines maximum amount of buttons able to be used, which is required
-    // due to the use of fixed ISRs for each button event
+    // due to the use of fixed ISRs for each button event. NOTE: this number
+    // is limited by the size of the vector containing pointers to ISRs, usually 8
     static const PROGMEM int MAX_BUTTONS = 6;
 
     int buttonPins[MAX_BUTTONS];
@@ -92,6 +94,8 @@ class ButtonHandler
         // For setting pointer to listener
         void setListener(EventListener listener);
 
+        void addEventForButtonNumber(int buttonNumber);
+
         // ISR definitions. Have to be public to allow passing of pointer to non-member functions
         // to attachInterrupt call
         void onKeyOneEvent();        
@@ -122,7 +126,6 @@ class ButtonHandler
 
         // Adds event to queue
         void addEvent(ButtonEvent event);
-        void addEventForButtonNumber(int buttonNumber);
 
         // Returns pointer to ISR function
         Isr getISR(int buttonIndex);
@@ -137,12 +140,46 @@ class ButtonHandler
 // Extern as defined globally in c++ implementation file
 extern ButtonHandler * _buttonHandler;
 
-// A sad hack to allow access to member functions from a global scope
-inline void keyOneAction() { _buttonHandler->onKeyOneEvent(); }
-inline void keyTwoAction() { _buttonHandler->onKeyTwoEvent(); }
-inline void keyThreeAction() { _buttonHandler->onKeyThreeEvent(); }
-inline void keyFourAction() { _buttonHandler->onKeyFourEvent(); }
-inline void keyFiveAction() { _buttonHandler->onKeyFiveEvent(); }
-inline void keySixAction() { _buttonHandler->onKeySixEvent(); }
+#pragma mark InterruptHandling
+
+// Template function called for each interrupt 
+template<int N>
+void handleInterrupt() {
+    _buttonHandler->addEventForButtonNumber(N+1);    
+}   
+
+// The following two structs are used to recursively construct and attach interrupt handlers
+template<int N> struct InterruptHelper {
+    static void attach(ButtonConfig config) 
+    {
+        if (config.buttonModes[N] != DISCONNECTED) {
+            pinMode(config.buttonPins[N], INPUT);
+
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, RISING);
+
+            if (config.buttonModes[N] == MODIFIER) 
+            {
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, FALLING);
+            }
+        }
+
+        InterruptHelper<N-1>::attach(config);        
+    }
+};
+
+template<> struct InterruptHelper<0> {
+    static void attach(ButtonConfig config) {
+        if (config.buttonModes[0] != DISCONNECTED) 
+        {
+            pinMode(config.buttonPins[0], INPUT);
+            
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, RISING);
+
+            if (config.buttonModes[0] == MODIFIER) {
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, FALLING);
+            }
+        }
+    }
+};
 
 #endif

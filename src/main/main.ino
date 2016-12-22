@@ -5,7 +5,6 @@
 
     Contains code relating to the operation of a Teensy LC board connected to 6 Cherry
     MX compatible switches. To use, refer to ButtonHandler library documentation as to
-    how to set up pins in correct modes.
 
 */
 
@@ -24,9 +23,7 @@ void setup() {
   handler.setListener(onEvent);
 }
 
-void loop() {
-  // Do nothing
-}
+void loop() {}
 
 void onEvent(ButtonEvent event) {
   Serial.println("Event: button number: " + String(event.number) + "; Event type: " + getEventTypeName(event.pressType));
