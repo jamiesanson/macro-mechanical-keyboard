@@ -3,12 +3,11 @@
     from simple buttons, where a HI logic level represents a button pressed.
 */
 
-#include <Arduino.h>
-#include <avr/pgmspace.h>
-#include <functional>
-
 #ifndef ButtonHandler_H
 #define ButtonHandler_H
+
+#include <Arduino.h>
+#include <avr/pgmspace.h>
 
 // Length of buffer containing current events
 #define EVENT_BUFFER_LENGTH 50
@@ -57,7 +56,8 @@ struct ButtonConfig
 };
 
 // static function for getting a String describing the enum constant
-const static String getEventTypeName(ButtonEventType type) {
+const static String getEventTypeName(ButtonEventType type) 
+{
     SUPPRESS_UNUSED(getEventTypeName);
 
     switch (type) {
@@ -144,12 +144,14 @@ extern ButtonHandler * _buttonHandler;
 
 // Template function called for each interrupt 
 template<int N>
-void handleInterrupt() {
+void handleInterrupt() 
+{
     _buttonHandler->addEventForButtonNumber(N+1);    
 }   
 
 // The following two structs are used to recursively construct and attach interrupt handlers
-template<int N> struct InterruptHelper {
+template<int N> struct InterruptHelper 
+{
     static void attach(ButtonConfig config) 
     {
         if (config.buttonModes[N] != DISCONNECTED) {
@@ -167,8 +169,10 @@ template<int N> struct InterruptHelper {
     }
 };
 
-template<> struct InterruptHelper<0> {
-    static void attach(ButtonConfig config) {
+template<> struct InterruptHelper<0> 
+{
+    static void attach(ButtonConfig config) 
+    {
         if (config.buttonModes[0] != DISCONNECTED) 
         {
             pinMode(config.buttonPins[0], INPUT);

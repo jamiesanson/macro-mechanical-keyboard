@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <ButtonHandler.h>
 
 ButtonHandler * _buttonHandler;
@@ -12,7 +11,8 @@ ButtonHandler::ButtonHandler(ButtonConfig config) : _config(config)
 }
 
 // Setting the callback function used to emit events to
-void ButtonHandler::setListener(EventListener listener) {
+void ButtonHandler::setListener(EventListener listener) 
+{
     _listener = listener;    
 }
 
