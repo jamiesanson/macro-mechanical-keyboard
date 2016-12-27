@@ -41,8 +41,7 @@ void ButtonHandler::resizeEvents()
         _events[i] = _events[i+1];
     }
 
-    _lastIndex -= 1;
-    Serial.println(String(_lastIndex));
+    _lastIndex--;
 }
 
 // Adds event to the queue if there is room in the queue.
@@ -60,7 +59,7 @@ void ButtonHandler::addEvent(ButtonEvent event) {
             _listener(event);
         } else {            
             _events[_lastIndex] = event;            
-            _lastIndex += 1;
+            _lastIndex++;
         }
         interrupts();
     }

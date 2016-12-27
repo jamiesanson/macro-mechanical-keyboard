@@ -96,15 +96,6 @@ class ButtonHandler
 
         void addEventForButtonNumber(int buttonNumber);
 
-        // ISR definitions. Have to be public to allow passing of pointer to non-member functions
-        // to attachInterrupt call
-        void onKeyOneEvent();        
-        void onKeyTwoEvent();
-        void onKeyThreeEvent();
-        void onKeyFourEvent();
-        void onKeyFiveEvent();
-        void onKeySixEvent();
-
     private:  
         // Buffer of events, maintains a queue-like implementation when items are added or removed
         ButtonEvent _events[EVENT_BUFFER_LENGTH];        
@@ -139,8 +130,6 @@ class ButtonHandler
 
 // Extern as defined globally in c++ implementation file
 extern ButtonHandler * _buttonHandler;
-
-#pragma mark InterruptHandling
 
 // Template function called for each interrupt 
 template<int N>
