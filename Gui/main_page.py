@@ -32,24 +32,32 @@ class main_page(QWidget):
         self.key1_btn = QPushButton('One')
         self.key1_btn.setMinimumHeight(self.key_btn_height)
         self.key1_btn.setMaximumWidth(self.key_btn_width)
-
+        self.key1_btn.clicked.connect(self.key1_clicked)
 
         self.key2_btn = QPushButton('Two')
         self.key2_btn.setMinimumHeight(self.key_btn_height)
         self.key2_btn.setMaximumWidth(self.key_btn_width)
+        self.key2_btn.clicked.connect(self.key2_clicked)
 
         self.key3_btn = QPushButton('Three')
         self.key3_btn.setMinimumHeight(self.key_btn_height)
         self.key3_btn.setMaximumWidth(self.key_btn_width)
+        self.key3_btn.clicked.connect(self.key3_clicked)
 
         self.key4_btn = QPushButton('Four')
         self.key4_btn.setMinimumHeight(self.key_btn_height)
+        self.key4_btn.setMaximumWidth(self.key_btn_width)
+        self.key4_btn.clicked.connect(self.key4_clicked)
 
         self.key5_btn = QPushButton('Five')
         self.key5_btn.setMinimumHeight(self.key_btn_height)
+        self.key5_btn.setMaximumWidth(self.key_btn_width)
+        self.key5_btn.clicked.connect(self.key5_clicked)
 
         self.key6_btn = QPushButton('Six')
         self.key6_btn.setMinimumHeight(self.key_btn_height)
+        self.key6_btn.setMaximumWidth(self.key_btn_width)
+        self.key6_btn.clicked.connect(self.key6_clicked)
 
         main_grid.addWidget(self.key1_btn, 1, 1)
         main_grid.addWidget(self.key2_btn, 1, 2)
@@ -59,8 +67,69 @@ class main_page(QWidget):
         main_grid.addWidget(self.key5_btn, 2, 2)
         main_grid.addWidget(self.key6_btn, 2, 3)
 
+        self.macro_string = QLabel('\t\t-- No Current Macro -- Click a key button to alter --')
+        # TODO alter string with macro key string for each button pressed
+
+        self.save_btn = QPushButton('Save config')
+        self.save_btn.setMaximumWidth(self.key_btn_width)
+        self.save_btn.clicked.connect(self.save_config)
+
+        self.start_macro_btn = QPushButton('Start Record')
+        self.start_macro_btn.setMaximumWidth(self.key_btn_width)
+
+        self.stop_macro_btn = QPushButton('Stop Record')
+        self.stop_macro_btn.setMaximumWidth(self.key_btn_width)
+
+        self.load_btn = QPushButton('Load Config')
+        self.load_btn.setMaximumWidth(self.key_btn_width)
+
+        self.flash_btn = QPushButton('FLASH')
+
+
+        main_grid.addWidget(self.macro_string, 3, 1, 1, 3)
+
+        main_grid.addWidget(self.save_btn, 4, 1)
+        main_grid.addWidget(self.load_btn, 5, 1)
+
+        main_grid.addWidget(self.start_macro_btn, 4, 2)
+        main_grid.addWidget(self.stop_macro_btn, 5, 2)
+
+        main_grid.addWidget(self.flash_btn, 5, 3)
+
         self.setLayout(main_grid)
 
+    def save_config(self):
+        print 'Save Config Now'
+
+    def load_config(self):
+        print 'Load Config Now'
+
+    def start_macro(self):
+        print 'Start Recording Macro'
+
+    def stop_macro(self):
+        print 'Stop Recording Macro'
+
+    def flash(self):
+        print 'Program Keyboard Now'
+
+    def key1_clicked(self):
+        print 'You clicked a key, yay'
+
+    def key2_clicked(self):
+        print 'You clicked a key, yay'
+
+    def key3_clicked(self):
+        print 'You clicked a key, yay'
+
+    def key4_clicked(self):
+        print 'You clicked a key, yay'
+
+    def key5_clicked(self):
+        print 'You clicked a key, yay'
+
+    def key6_clicked(self):
+        print 'You clicked a key, yay'
 
 
 if __name__ == '__main__':
