@@ -1,0 +1,66 @@
+#main_grid{
+    /*background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(255, 255, 0), stop: 1 #101010);*/
+    /*background-color: QRadialGradient(cx: 0.9, cy: 0.9, radius: 3, fx: 1, fy: 1, stop: 0 rgb(255,30,30), stop: 0.2 rgb(255,30,60), stop: 0.4 rgb(255,30,150));*/
+    background-color: QRadialGradient(cx: 0.9, cy: 0.9, radius: 3, fx: 1, fy: 1,
+            stop: 0 rgb(109, 175, 179),
+            stop: 0.2 rgb(141, 200, 201),
+            stop: 0.3 rgb(102, 200, 222),
+            stop: 0.4 rgb(63, 180, 242));
+}
+#flash_btn:enabled{
+    border: 2px solid black;
+    border-radius: 5px;
+    background-color: rgb(0, 255, 0);
+}
+#flash_btn:hover{
+    border-style: hidden;
+}
+#flash_btn:focus{
+    background-color: #FF000F;
+    border-style: hidden;
+}
+
+#key_btn_generic:enabled{
+    border: 3px rgb(179, 199, 245);
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-right-style: hidden;
+    border-left-style: hidden;
+    border-radius: 30px;
+
+    background-color: rgb(179, 228, 245);
+    font-size: 50px;
+    font-family: Tahoma, Geneva, sans-serif;
+}
+#key_btn_generic:hover{
+    border: 3px rgb(179, 199, 245);
+    border-top-style: hidden;
+    border-bottom-style: hidden;
+    border-right-style: solid;
+    border-left-style: solid;
+    border-radius: 30px;
+
+    background-color: rgb(181, 235, 206);
+}
+#key_btn_generic:focus{
+    background-color: rgb(167, 235, 198);
+    border: 3px solid rgb(179, 199, 245);
+}
+
+#work_btn_generic:enabled{
+    border: 2px solid #0F0F0F;
+    border-radius: 8px;
+    font-size: 12px;
+}
+#work_btn_generic:disabled{
+    background-color: #647A5F;
+}
+#work_btn_generic:hover{
+    background-color: #38A322;
+}
+#work_btn_generic:focus{
+    background-color: #38A322;
+}
+#macro_string{
+    padding-left: 20px;
+}
