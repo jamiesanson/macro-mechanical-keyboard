@@ -18,46 +18,27 @@ class main_page(QWidget):
         self.setMinimumSize(self.min_width, self.min_height)
         self.setMaximumSize(self.min_width, self.min_height)
 
-        main_widget = QWidget()
         main_grid = QGridLayout()
 
-        # Add a graphical selection of keyboard key
-        # -----------------------
-        #   1   |   2    |   3
-        # -----------------------
-        #   4   |   5    |   6
-        # -----------------------
+        # Layout Keyboard button buttons
 
+        self.key1_btn = QPushButton('1')
+        self.key1_btn.clicked.connect(lambda: self.key_clicked(1))
 
-        self.key1_btn = QPushButton('One')
-        self.key1_btn.setMinimumHeight(self.key_btn_height)
-        self.key1_btn.setMaximumWidth(self.key_btn_width)
-        self.key1_btn.clicked.connect(self.key1_clicked)
+        self.key2_btn = QPushButton('2')
+        self.key2_btn.clicked.connect(lambda: self.key_clicked(2))
 
-        self.key2_btn = QPushButton('Two')
-        self.key2_btn.setMinimumHeight(self.key_btn_height)
-        self.key2_btn.setMaximumWidth(self.key_btn_width)
-        self.key2_btn.clicked.connect(self.key2_clicked)
+        self.key3_btn = QPushButton('3')
+        self.key3_btn.clicked.connect(lambda: self.key_clicked(3))
 
-        self.key3_btn = QPushButton('Three')
-        self.key3_btn.setMinimumHeight(self.key_btn_height)
-        self.key3_btn.setMaximumWidth(self.key_btn_width)
-        self.key3_btn.clicked.connect(self.key3_clicked)
+        self.key4_btn = QPushButton('4')
+        self.key4_btn.clicked.connect(lambda: self.key_clicked(4))
 
-        self.key4_btn = QPushButton('Four')
-        self.key4_btn.setMinimumHeight(self.key_btn_height)
-        self.key4_btn.setMaximumWidth(self.key_btn_width)
-        self.key4_btn.clicked.connect(self.key4_clicked)
+        self.key5_btn = QPushButton('5')
+        self.key5_btn.clicked.connect(lambda: self.key_clicked(5))
 
-        self.key5_btn = QPushButton('Five')
-        self.key5_btn.setMinimumHeight(self.key_btn_height)
-        self.key5_btn.setMaximumWidth(self.key_btn_width)
-        self.key5_btn.clicked.connect(self.key5_clicked)
-
-        self.key6_btn = QPushButton('Six')
-        self.key6_btn.setMinimumHeight(self.key_btn_height)
-        self.key6_btn.setMaximumWidth(self.key_btn_width)
-        self.key6_btn.clicked.connect(self.key6_clicked)
+        self.key6_btn = QPushButton('6')
+        self.key6_btn.clicked.connect(lambda: self.key_clicked(6))
 
         main_grid.addWidget(self.key1_btn, 1, 1)
         main_grid.addWidget(self.key2_btn, 1, 2)
@@ -67,12 +48,20 @@ class main_page(QWidget):
         main_grid.addWidget(self.key5_btn, 2, 2)
         main_grid.addWidget(self.key6_btn, 2, 3)
 
-        self.macro_string = QLabel('\t\t-- No Current Macro -- Click a key button to alter --')
+        self.key_list = [self.key1_btn, self.key2_btn, self.key3_btn, self.key4_btn, self.key5_btn, self.key6_btn]
+
+        for i in range(6): # Iteratively set the width and height of keys
+            self.key_list[i].setMinimumHeight(self.key_btn_height)
+            self.key_list[i].setMaximumWidth(self.key_btn_width)
+
+        # Layout additional UI Features
+
+        self.macro_string = QLabel('-- No Current Macro -- Click a key button to alter --')
         # TODO alter string with macro key string for each button pressed
 
         self.save_btn = QPushButton('Save config')
         self.save_btn.setMaximumWidth(self.key_btn_width)
-        self.save_btn.clicked.connect(self.save_config)
+        self.save_btn.clicked.connect(lambda: self.macro_string.setText('akdkdk'))
 
         self.start_macro_btn = QPushButton('Start Record')
         self.start_macro_btn.setMaximumWidth(self.key_btn_width)
@@ -85,7 +74,6 @@ class main_page(QWidget):
 
         self.flash_btn = QPushButton('FLASH')
 
-
         main_grid.addWidget(self.macro_string, 3, 1, 1, 3)
 
         main_grid.addWidget(self.save_btn, 4, 1)
@@ -96,7 +84,36 @@ class main_page(QWidget):
 
         main_grid.addWidget(self.flash_btn, 5, 3)
 
+        # Tooltips
+        self.macro_string.setToolTip('Displays macro set to key selected, if applicable')
+        self.save_btn.setToolTip('Writes out current macro setting to a file')
+        self.load_btn.setToolTip('Load previous macro settings from a file')
+        self.start_macro_btn.setToolTip('Begin recording all key strokes')
+        self.stop_macro_btn.setToolTip('Stop recording all key strokes')
+        self.flash_btn.setToolTip('Write macros to Teensy')
+
+        # Name all buttons as themselves for css styling
+        self.flash_btn.setObjectName('flash_btn')
+        self.key1_btn.setObjectName('key_btn_generic')
+        self.key2_btn.setObjectName('key_btn_generic')
+        self.key3_btn.setObjectName('key_btn_generic')
+        self.key4_btn.setObjectName('key_btn_generic')
+        self.key5_btn.setObjectName('key_btn_generic')
+        self.key6_btn.setObjectName('key_btn_generic')
+        self.load_btn.setObjectName('work_btn_generic')
+        self.save_btn.setObjectName('work_btn_generic')
+        self.start_macro_btn.setObjectName('work_btn_generic')
+        self.stop_macro_btn.setObjectName('work_btn_generic')
+        self.macro_string.setObjectName('macro_string')
+        self.setObjectName('main_grid')
+
+        # Load in css stylesheet from file
+        style_file = 'python_gui_styling.css'
+        with open(style_file, 'r') as fh:
+            self.setStyleSheet(fh.read())
+
         self.setLayout(main_grid)
+        self.show()
 
     def save_config(self):
         print 'Save Config Now'
@@ -106,6 +123,7 @@ class main_page(QWidget):
 
     def start_macro(self):
         print 'Start Recording Macro'
+        #TODO keep focus on key button once completed
 
     def stop_macro(self):
         print 'Stop Recording Macro'
@@ -113,23 +131,8 @@ class main_page(QWidget):
     def flash(self):
         print 'Program Keyboard Now'
 
-    def key1_clicked(self):
-        print 'You clicked a key, yay'
-
-    def key2_clicked(self):
-        print 'You clicked a key, yay'
-
-    def key3_clicked(self):
-        print 'You clicked a key, yay'
-
-    def key4_clicked(self):
-        print 'You clicked a key, yay'
-
-    def key5_clicked(self):
-        print 'You clicked a key, yay'
-
-    def key6_clicked(self):
-        print 'You clicked a key, yay'
+    def key_clicked(self, key_number):
+        print 'Pressed button {0}'.format(key_number)
 
 
 if __name__ == '__main__':
