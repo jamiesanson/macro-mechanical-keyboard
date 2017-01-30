@@ -35,3 +35,53 @@ _$_t0.5t_C_t0.5t_V$_
 
 With this method, the underscores serve as separators for each command (mostly)
 so gives a fairly human readable representation of the macro.
+
+--------------------------------------------------------------------------------
+                            Implementation notes:
+--------------------------------------------------------------------------------
+
+The easiest way to process commands (i.e individual key commands) would be through
+the use of C structs, holding the key code required to be pressed, and the command
+type. This could work in a few ways, one would be to use key-command actions and 
+dispatch HID events based off of this. This would work as such:
+
+Example 1: Shift modifier down action 
+--------------------------------------
+
+KeyAction {
+  Type:"MODIFIER_DOWN",
+  Payload:KEY_SHIFT
+}
+
+
+Example 2: Single key press
+--------------------------------------
+
+KeyAction {
+  Type:"SINGLE_PRESS",
+  Payload:'A'
+}
+
+
+Example 3: String printing
+--------------------------------------
+
+KeyAction {
+  Type:"RAW_STRING",
+  Payload:"This is an example String \n"
+}
+
+In these examples, the action types could be easily enumerated, and when storing to keyboard-
+local storage could be formatted such that it's programatically easy to interpret. In these examples
+it's notable that the payload is of different type in each example, requiring the use of templates.
+
+This would mean each macro is implemented as an array of actions, which would be loaded from 
+keyboard-local storage on startup. The firmware would need to be able to interpret command 
+overwriting strings sent via Serial, and rewrite the config saved locally on the keyboard.
+
+To minimise runtime computation required, each string sent to the device via Serial, and saved
+to storage would be written in the same format. This allows direct modification of the config
+as new overwriting Strings are sent through, and then partial, or total refresh of the device.
+Note, total refresh i.e re-running the routine to generate the Action Vectors in memory would 
+be useful in the case where the user updates all the macros from the supporting software, 
+requiring the entire config to be changed.
