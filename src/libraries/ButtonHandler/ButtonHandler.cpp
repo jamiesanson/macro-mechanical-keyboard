@@ -2,7 +2,6 @@
 
 ButtonHandler * _buttonHandler;
 
-// Empty constructor
 ButtonHandler::ButtonHandler(ButtonConfig config) : _config(config)
 {
     // Global reference needed for global ISR pointer
@@ -16,15 +15,15 @@ void ButtonHandler::setListener(EventListener listener)
     _listener = listener;    
 }
 
-// Emits the next queued event if it exists
-void ButtonHandler::eventComplete() 
+// Loop passthrough to handle event dispatching of queued items
+void ButtonHandler::onLoop()
 {
-    
     if (!isEventsEmpty()) {
         _listener(_events[0]);
-        resizeEvents();
-    } else {
-        _processingComplete = true;
+
+        ATOMIC(
+            resizeEvents();
+        )
     }
 }
 
@@ -48,31 +47,38 @@ void ButtonHandler::resizeEvents()
 // If the consumer of the library is not processing an event, and the 
 // events queue is empty then simply emit the event, and queue others
 void ButtonHandler::addEvent(ButtonEvent event) {
-    if (_lastIndex < EVENT_BUFFER_LENGTH && _buttonTimeout > BUTTON_DEBOUNCE_INTERVAL_MILLIS) {
-        noInterrupts();
-        
-        // Invert pressed state after debouncing
-        _buttonStatePressed[event.number-1] = !_buttonStatePressed[event.number-1];
-
-        if (_processingComplete && isEventsEmpty()) {
-            _processingComplete = false;
-            _listener(event);
-        } else {            
-            _events[_lastIndex] = event;            
-            _lastIndex++;
-        }
-        interrupts();
+    if (_lastIndex < EVENT_BUFFER_LENGTH) {
+        // Add event to buffer and increment last index
+        _events[_lastIndex] = event;            
+        _lastIndex++;
     }
 }
 
-void ButtonHandler::addEventForButtonNumber(int number)
+// Handles button press event. Simply adds event to queue
+void ButtonHandler::onPress(int number) 
 {
-    if (_config.buttonModes[number-1] == MODIFIER) {
-        addEvent((ButtonEvent) {number, _buttonStatePressed[number-1] ? BUTTON_UP : BUTTON_DOWN});
-    } else {        
-        addEvent((ButtonEvent) {number, BUTTON_PRESS});
-    }
+    if (_buttonTimeout[number-1] > NORMAL_DEBOUNCE_INTERVAL_MILLIS) {
+        ATOMIC(
+            addEvent((ButtonEvent) {number, BUTTON_PRESS});
+        )
 
-    _buttonTimeout = 0;
+        _buttonTimeout[number-1] = 0;
+    }
+}
+
+// Handles modifier event. Determines if the modifier has been pressed or released, then 
+// adds the event to the queue
+void ButtonHandler::onModifier(int number)
+{
+     if (_buttonTimeout[number-1] > MODIFIER_DEBOUNCE_INTERVAL_MILLIS) {
+        ATOMIC(
+            delay(1); // Delay is required to allow an accurate pin read
+            _modifierActive = digitalRead(_config.buttonPins[number-1]);
+
+            addEvent((ButtonEvent) {number, _modifierActive ? BUTTON_DOWN : BUTTON_UP});
+        )
+
+        _buttonTimeout[number-1] = 0;
+    }
 }
 

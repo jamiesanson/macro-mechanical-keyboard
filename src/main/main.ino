@@ -33,31 +33,15 @@ void setup() {
   manager.setupButton(0, buildTestString());
 }
 
-void loop() {}
+void loop() {
+  handler.onLoop();
+}
 
 void onEvent(ButtonEvent event) {
   Serial.println("Event: button number: " + String(event.number) + "; Event type: " + getEventTypeName(event.pressType));  
   manager.dispatchForIndex(event.number - 1);   
   handler.eventComplete(); 
 }
-
-//void handleOne() {
-//  Keyboard.set_key1(KEY_T);
-//  Keyboard.send_now();
-//  delay(50);
-//  Keyboard.println("What a cunt!");
-//  delay(100);
-//  handler.eventComplete();
-//}
-//
-//void handleTwo() {
-//  Keyboard.set_key1(KEY_T);
-//  Keyboard.send_now();
-//  delay(50);
-//  Keyboard.println("Nice meme!");
-//  delay(100);
-//  handler.eventComplete();
-//}
 
 String buildTestString() {
   String test = "";
