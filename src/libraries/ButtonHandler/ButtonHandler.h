@@ -12,9 +12,14 @@
 // Length of buffer containing current events
 #define EVENT_BUFFER_LENGTH 50
 
-#define BUTTON_DEBOUNCE_INTERVAL_MILLIS 75
+// These differ due to the fact that the atomic section of the button press ISR
+// for a modifier key contains a call to digitalRead, which takes time
+#define NORMAL_DEBOUNCE_INTERVAL_MILLIS 100
+#define MODIFIER_DEBOUNCE_INTERVAL_MILLIS 1
 
 #define SUPPRESS_UNUSED(param) (void)param 
+
+#define ATOMIC(param) noInterrupts();param;interrupts();
 
 // Defining event types for button presses, where up correspond to hold events
 PROGMEM enum ButtonEventType 
@@ -90,11 +95,9 @@ class ButtonHandler
         // For setting pointer to listener
         void setListener(EventListener listener);
 
-        // Called during ISR
-        void onModifier(int buttonNumber);
-
-        // Called during ISR
         void onPress(int buttonNumber);
+
+        void onModifier(int buttonNumber);
 
         // For dispatching queued events
         void onLoop();
@@ -121,10 +124,9 @@ class ButtonHandler
         Isr getISR(int buttonIndex);
 
         // Used for debouncing interrupts
-        elapsedMillis _buttonTimeout;
+        elapsedMillis _buttonTimeout[ButtonConfig::MAX_BUTTONS];
 
-        // For modifier key states, true is pressed, false is open
-        boolean _buttonStatePressed[ButtonConfig::MAX_BUTTONS];
+        bool _modifierActive = false;
 };
 
 // Extern as defined globally in c++ implementation file
