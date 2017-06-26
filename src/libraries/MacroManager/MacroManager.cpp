@@ -4,6 +4,8 @@ MacroManager *_macroManager;
 
 MacroManager::MacroManager(int cs, int cd) : _cs(cs), _cd(cd)
 {
+    _macroManager = this;
+
     // Attach ISR to card detect
     attachInterrupt(digitalPinToInterrupt(_cd), onCardStateChanged, CHANGE);
     updateCardState();
@@ -18,7 +20,9 @@ MacroManager::MacroManager(int cs, int cd) : _cs(cs), _cd(cd)
 // Public functions
 void MacroManager::buttonPressed(String buttonName) 
 {
-    String _fileName = MACRO_DIR + buttonName;
+    String _fileName = MACRO_DIR + buttonName + ".mac";
+
+    Serial.println("Opening: " + _fileName);
 
     _fileName.toCharArray(_fileNameBuffer, FN_BUF_SIZE);
 
@@ -27,7 +31,17 @@ void MacroManager::buttonPressed(String buttonName)
     // Only continue if the macro file opened properly
     if (_macro) 
     {
-        
+        Serial.println("file exists");
+        while (!_cardNotPresent && _macro.available()) 
+        {
+            _parser->parse(_macro.read());
+
+            if (_listener->actionReady()) {
+                dispatchAction(_listener->getAction());
+            }
+        }
+    } else {
+        Serial.println("Opening: " + _fileName + " failed :(");
     }
 }
 
@@ -41,4 +55,9 @@ void MacroManager::updateCardState()
 void MacroManager::beginSD()
 {
     SD.begin(_cs);
+}
+
+void MacroManager::dispatchAction(Action action)
+{
+    Serial.println("ActionType: " + String(action.type) + "; ActionVal: " + String(action.value));
 }

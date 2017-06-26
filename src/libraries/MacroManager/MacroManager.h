@@ -8,12 +8,17 @@
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
+#include <SD.h>
+
+#include "JsonStreamingParser.h"
+#include "JsonListener.h"
+#include "FileListener.h"
 
 #define SUPPRESS_UNUSED(param) (void)param 
 
-#define MACRO_DIR "macros/"
+#define MACRO_DIR "/macros/"
 
-#define FN_BUF_SIZE 64
+#define FN_BUF_SIZE 20
 
 // Enum containing individual actions
 PROGMEM enum ActionType
@@ -24,9 +29,6 @@ PROGMEM enum ActionType
     SINGLE_PRESS,
     RAW_STRING
 };
-
-// Extern as defined globally in c++ implementation file
-extern MacroManager *_macroManager;
 
 class MacroManager
 {
@@ -46,13 +48,20 @@ class MacroManager
       bool _cardNotPresent;
 
       char _fileNameBuffer[FN_BUF_SIZE];
+
+      FileListener *_listener = new FileListener();
+      JsonStreamingParser *_parser = new JsonStreamingParser();
+
       void beginSD();
 
-
+      void dispatchAction(Action action);
 };
 
+// Extern as defined globally in c++ implementation file
+extern MacroManager *_macroManager;
+
 // ISR called when card is ejected to put in
-void onCardStateChanged() 
+inline void onCardStateChanged() 
 {
     _macroManager->updateCardState();
 }

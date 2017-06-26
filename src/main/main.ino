@@ -12,25 +12,24 @@
 */
 
 #include "ButtonHandler.h"
-#include "MacroManager.h" 
+#include "MacroManager.h"
 
 #define SERIAL_BAUD 115200
+#define SD_CS 10
+#define SD_CD 15
+
 #define BUTTON_COUNT 6
 #define BUTTON_PINS {2, 3, 5, 6, 7, 8}
-#define BUTTON_MODES {STANDARD, STANDARD, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED}
-
-#define KEY_CTRL 69
+#define BUTTON_MODES {STANDARD, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED}
 
 ButtonConfig buttonConfig = (ButtonConfig){BUTTON_PINS, BUTTON_MODES};
 
 ButtonHandler handler(buttonConfig);
-MacroManager manager;
+MacroManager manager(SD_CS, SD_CD);
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
   handler.setListener(onEvent);
-  while (!Serial.available());
-  manager.setupButton(0, buildTestString());
 }
 
 void loop() {
@@ -39,40 +38,6 @@ void loop() {
 
 void onEvent(ButtonEvent event) {
   Serial.println("Event: button number: " + String(event.number) + "; Event type: " + getEventTypeName(event.pressType));  
-  manager.dispatchForIndex(event.number - 1);   
-  handler.eventComplete(); 
+  manager.buttonPressed(String(1));
 }
-
-String buildTestString() {
-  String test = "";
-  // delay
-  test += COMMAND('t');
-  test += String(2000);
-  test += COMMAND('t');
-
-  // modifier down
-  test += COMMAND('d');
-  test += String(KEY_CTRL);
-  test += COMMAND('d');
-
-  // modifier up
-  test += COMMAND('u');
-  test += String(KEY_CTRL);
-  test += COMMAND('u');
-
-  test += "Random text in the middle to try stuff things up";
-
-  // single char
-  test += COMMAND('c');
-  test += String('k');
-  test += COMMAND('c');
-
-  // raw string
-  test += COMMAND('s');
-  test += String("This is a test string");
-  test += COMMAND('s');
-  
-  return test;
-}
-
 
