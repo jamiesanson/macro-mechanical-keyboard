@@ -5,9 +5,11 @@ MacroManager *_macroManager;
 MacroManager::MacroManager(int cs, int cd) : _cs(cs), _cd(cd)
 {
     _macroManager = this;
-
+    _parser->setListener(_listener);
     // Attach ISR to card detect
     attachInterrupt(digitalPinToInterrupt(_cd), onCardStateChanged, CHANGE);
+    pinMode(_cd, INPUT);
+
     updateCardState();
 
     // Start the SD card if it exists
@@ -26,6 +28,8 @@ void MacroManager::buttonPressed(String buttonName)
 
     _fileName.toCharArray(_fileNameBuffer, FN_BUF_SIZE);
 
+    beginSD();
+    
     File _macro = SD.open(_fileNameBuffer, FILE_READ);
 
     // Only continue if the macro file opened properly
