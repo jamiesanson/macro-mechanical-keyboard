@@ -84,27 +84,26 @@ class ButtonHandler
         // Constructor
         ButtonHandler(ButtonConfig config);
 
-        // Notified queue that the previously emitted event has been processed and that it should 
-        // emit the next item in the queue if available
-        void eventComplete();
-
         // Public reference to current config
         ButtonConfig _config;
 
         // For setting pointer to listener
         void setListener(EventListener listener);
 
-        void addEventForButtonNumber(int buttonNumber);
+        // Called during ISR
+        void onModifier(int buttonNumber);
+
+        // Called during ISR
+        void onPress(int buttonNumber);
+
+        // For dispatching queued events
+        void onLoop();
 
     private:  
         // Buffer of events, maintains a queue-like implementation when items are added or removed
         ButtonEvent _events[EVENT_BUFFER_LENGTH];        
         // For queue implementation
         int _lastIndex = 0; 
-
-        // Used for maintaining information about whether the main sketch has finished processing the last 
-        // emitted event
-        boolean _processingComplete = true;
 
         // listener for new events to be emitted to
         EventListener _listener;
@@ -133,9 +132,16 @@ extern ButtonHandler * _buttonHandler;
 
 // Template function called for each interrupt 
 template<int N>
-void handleInterrupt() 
+void handleButton() 
 {
-    _buttonHandler->addEventForButtonNumber(N+1);    
+    _buttonHandler->onPress(N+1);    
+}   
+
+// Exploiting the fact that the last ISR set is the one called
+template<int N>
+void handleModifier() 
+{
+    _buttonHandler->onModifier(N+1);    
 }   
 
 // The following two structs are used to recursively construct and attach interrupt handlers
@@ -143,14 +149,15 @@ template<int N> struct InterruptHelper
 {
     static void attach(ButtonConfig config) 
     {
-        if (config.buttonModes[N] != DISCONNECTED) {
+        if (config.buttonModes[N] != DISCONNECTED) 
+        {
             pinMode(config.buttonPins[N], INPUT);
 
-            attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, RISING);
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleButton<N>, RISING);
 
             if (config.buttonModes[N] == MODIFIER) 
             {
-                attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, FALLING);
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleModifier<N>, FALLING);
             }
         }
 
@@ -166,10 +173,10 @@ template<> struct InterruptHelper<0>
         {
             pinMode(config.buttonPins[0], INPUT);
             
-            attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, RISING);
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleButton<0>, RISING);
 
             if (config.buttonModes[0] == MODIFIER) {
-                attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, FALLING);
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleModifier<0>, FALLING);
             }
         }
     }

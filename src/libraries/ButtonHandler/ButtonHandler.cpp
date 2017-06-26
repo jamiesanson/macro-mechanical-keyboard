@@ -2,7 +2,6 @@
 
 ButtonHandler * _buttonHandler;
 
-// Empty constructor
 ButtonHandler::ButtonHandler(ButtonConfig config) : _config(config)
 {
     // Global reference needed for global ISR pointer
@@ -16,15 +15,12 @@ void ButtonHandler::setListener(EventListener listener)
     _listener = listener;    
 }
 
-// Emits the next queued event if it exists
-void ButtonHandler::eventComplete() 
+// Loop passthrough to handle event dispatching of queued items
+void ButtonHandler::onLoop()
 {
-    
     if (!isEventsEmpty()) {
         _listener(_events[0]);
         resizeEvents();
-    } else {
-        _processingComplete = true;
     }
 }
 
@@ -49,30 +45,25 @@ void ButtonHandler::resizeEvents()
 // events queue is empty then simply emit the event, and queue others
 void ButtonHandler::addEvent(ButtonEvent event) {
     if (_lastIndex < EVENT_BUFFER_LENGTH && _buttonTimeout > BUTTON_DEBOUNCE_INTERVAL_MILLIS) {
-        noInterrupts();
         
-        // Invert pressed state after debouncing
+        // Invert pressed state after debouncing, used for modifier presses only
         _buttonStatePressed[event.number-1] = !_buttonStatePressed[event.number-1];
-
-        if (_processingComplete && isEventsEmpty()) {
-            _processingComplete = false;
-            _listener(event);
-        } else {            
-            _events[_lastIndex] = event;            
-            _lastIndex++;
-        }
-        interrupts();
+        
+        // Add event to buffer and increment last index
+        _events[_lastIndex] = event;            
+        _lastIndex++;
     }
 }
 
-void ButtonHandler::addEventForButtonNumber(int number)
+void ButtonHandler::onPress(int number) 
 {
-    if (_config.buttonModes[number-1] == MODIFIER) {
-        addEvent((ButtonEvent) {number, _buttonStatePressed[number-1] ? BUTTON_UP : BUTTON_DOWN});
-    } else {        
-        addEvent((ButtonEvent) {number, BUTTON_PRESS});
-    }
+    addEvent((ButtonEvent) {number, BUTTON_PRESS});
+    _buttonTimeout = 0;
+}
 
+void ButtonHandler::onModifier(int number) 
+{
+    addEvent((ButtonEvent) {number, _buttonStatePressed[number-1] ? BUTTON_UP : BUTTON_DOWN});
     _buttonTimeout = 0;
 }
 

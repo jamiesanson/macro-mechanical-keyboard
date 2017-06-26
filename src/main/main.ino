@@ -12,7 +12,7 @@
 
 #define SERIAL_BAUD 115200
 #define BUTTON_PINS {2, 3, 5, 6, 7, 8}
-#define BUTTON_MODES {MODIFIER, STANDARD, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED}
+#define BUTTON_MODES {MODIFIER, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED, DISCONNECTED}
 
 ButtonConfig buttonConfig = (ButtonConfig){BUTTON_PINS, BUTTON_MODES};
 
@@ -23,10 +23,11 @@ void setup() {
   handler.setListener(onEvent);
 }
 
-void loop() {}
+void loop() {
+  handler.onLoop();
+}
 
 void onEvent(ButtonEvent event) {
   Serial.println("Event: button number: " + String(event.number) + "; Event type: " + getEventTypeName(event.pressType));
-  handler.eventComplete();
 }
 
