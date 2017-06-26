@@ -12,9 +12,14 @@
 // Length of buffer containing current events
 #define EVENT_BUFFER_LENGTH 50
 
-#define BUTTON_DEBOUNCE_INTERVAL_MILLIS 75
+// These differ due to the fact that the atomic section of the button press ISR
+// for a modifier key contains a call to digitalRead, which takes time
+#define NORMAL_DEBOUNCE_INTERVAL_MILLIS 100
+#define MODIFIER_DEBOUNCE_INTERVAL_MILLIS 1
 
 #define SUPPRESS_UNUSED(param) (void)param 
+
+#define ATOMIC(param) noInterrupts();param;interrupts();
 
 // Defining event types for button presses, where up correspond to hold events
 PROGMEM enum ButtonEventType 
@@ -84,27 +89,24 @@ class ButtonHandler
         // Constructor
         ButtonHandler(ButtonConfig config);
 
-        // Notified queue that the previously emitted event has been processed and that it should 
-        // emit the next item in the queue if available
-        void eventComplete();
-
         // Public reference to current config
         ButtonConfig _config;
 
         // For setting pointer to listener
         void setListener(EventListener listener);
 
-        void addEventForButtonNumber(int buttonNumber);
+        void onPress(int buttonNumber);
+
+        void onModifier(int buttonNumber);
+
+        // For dispatching queued events
+        void onLoop();
 
     private:  
         // Buffer of events, maintains a queue-like implementation when items are added or removed
         ButtonEvent _events[EVENT_BUFFER_LENGTH];        
         // For queue implementation
         int _lastIndex = 0; 
-
-        // Used for maintaining information about whether the main sketch has finished processing the last 
-        // emitted event
-        boolean _processingComplete = true;
 
         // listener for new events to be emitted to
         EventListener _listener;
@@ -122,10 +124,9 @@ class ButtonHandler
         Isr getISR(int buttonIndex);
 
         // Used for debouncing interrupts
-        elapsedMillis _buttonTimeout;
+        elapsedMillis _buttonTimeout[ButtonConfig::MAX_BUTTONS];
 
-        // For modifier key states, true is pressed, false is open
-        boolean _buttonStatePressed[ButtonConfig::MAX_BUTTONS];
+        bool _modifierActive = false;
 };
 
 // Extern as defined globally in c++ implementation file
@@ -133,9 +134,16 @@ extern ButtonHandler * _buttonHandler;
 
 // Template function called for each interrupt 
 template<int N>
-void handleInterrupt() 
+void handleButton() 
 {
-    _buttonHandler->addEventForButtonNumber(N+1);    
+    _buttonHandler->onPress(N+1);    
+}   
+
+// Exploiting the fact that the last ISR set is the one called
+template<int N>
+void handleModifier() 
+{
+    _buttonHandler->onModifier(N+1);    
 }   
 
 // The following two structs are used to recursively construct and attach interrupt handlers
@@ -143,14 +151,15 @@ template<int N> struct InterruptHelper
 {
     static void attach(ButtonConfig config) 
     {
-        if (config.buttonModes[N] != DISCONNECTED) {
+        if (config.buttonModes[N] != DISCONNECTED) 
+        {
             pinMode(config.buttonPins[N], INPUT);
 
-            attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, RISING);
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleButton<N>, RISING);
 
             if (config.buttonModes[N] == MODIFIER) 
             {
-                attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleInterrupt<N>, FALLING);
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[N]), handleModifier<N>, FALLING);
             }
         }
 
@@ -166,10 +175,10 @@ template<> struct InterruptHelper<0>
         {
             pinMode(config.buttonPins[0], INPUT);
             
-            attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, RISING);
+            attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleButton<0>, RISING);
 
             if (config.buttonModes[0] == MODIFIER) {
-                attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleInterrupt<0>, FALLING);
+                attachInterrupt(digitalPinToInterrupt(config.buttonPins[0]), handleModifier<0>, FALLING);
             }
         }
     }
