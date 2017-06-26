@@ -1,7 +1,6 @@
 /**
     This file, along with the accompanying implementation file contain code to handle the dispactching of HID
-    keypress events when triggered. It stores a series of action vectors, which contain Key actions, which are
-    dispatched in orger when indexed.
+    keypress events when triggered. It also handles interaction with the SD card.
 */
 
 #ifndef MacroManager_H
@@ -12,10 +11,9 @@
 
 #define SUPPRESS_UNUSED(param) (void)param 
 
-#define COMMAND_FLAG 0b10000000
-#define COMMAND(t) (char) (t | COMMAND_FLAG) 
-#define INVALID_ACTION -1
-#define MAX_ACTIONVECTORS 6
+#define MACRO_DIR "macros/"
+
+#define FN_BUF_SIZE 64
 
 // Enum containing individual actions
 PROGMEM enum ActionType
@@ -27,89 +25,36 @@ PROGMEM enum ActionType
     RAW_STRING
 };
 
-// Region action type definitions
-class KeyAction {
-    public:
-        ActionType type;
-        virtual void dummy();
-};
-
-class DelayAction : public KeyAction {
-    int delayMillis;
-    public:
-        DelayAction(int delay) : delayMillis(delay) {
-            type = DELAY;
-        }
-
-        int getDelay() { return delayMillis; }
-};
-
-class ModifierAction : public KeyAction {
-    int payload;
-    public:
-        ModifierAction(int p, boolean up) : payload(p) {
-            type = up ? MODIFIER_UP : MODIFIER_DOWN;
-        }
-
-        int getPayload() { return payload; }
-};
-
-class SinglePressAction : public KeyAction {
-    char payload;
-    public:
-        SinglePressAction(char p) : payload(p) {
-            type = SINGLE_PRESS;
-        }
-
-        char getPayload() { return payload; }
-};
-
-class RawStringAction : public KeyAction {
-    String payload;
-    public:
-        RawStringAction(String p) : payload(p) {
-            type = RAW_STRING;
-        }
-
-        String getPayload() { return payload; }
-};
-// End region
-
-// Struct acting as type definition for a vector of actions, which represents an entire command
-struct ActionVector
-{
-    int length;
-    KeyAction actions[50];
-};
-
+// Extern as defined globally in c++ implementation file
+extern MacroManager *_macroManager;
 
 class MacroManager
 {
     public:
-        MacroManager();
+        MacroManager(int cs, int cd);
 
-        void setupButton(int index, String actions);
-
-        void dispatchForIndex(int index);
+        void buttonPressed(String buttonName);
+        
+        // Called by globally scoped ISR, not meant to be called external to library
+        void updateCardState();
 
     private:
-        ActionVector _actionVectors[MAX_ACTIONVECTORS];
+      
+      // Chip select and Chip detect pins
+      int _cs, _cd;
 
-        // Function for building an ActionVector from a given String
-        ActionVector loadVector(String actionVector);
-        
-        // Runs the supplied ActionVector
-        void runVector(ActionVector vector);
+      bool _cardNotPresent;
 
-        // Iterates over the string to be loaded to get the number of actions
-        // returns -1 if the actionVector is invalid 
-        int getActionCount(String actionVector);
+      char _fileNameBuffer[FN_BUF_SIZE];
+      void beginSD();
 
-        // Reads command flag and returns correct ActionType
-        ActionType getTypeForChar(char command);
 
-        // Builds KeyAction for given string and type
-        KeyAction getAction(String commandStr, ActionType type);
 };
+
+// ISR called when card is ejected to put in
+void onCardStateChanged() 
+{
+    _macroManager->updateCardState();
+}
 
 #endif
