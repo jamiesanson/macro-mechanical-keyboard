@@ -44,6 +44,8 @@ void MacroManager::buttonPressed(String buttonName)
                 dispatchAction(_listener->getAction());
             }
         }
+        
+        _macro.close();
     } else {
         Serial.println("Opening: " + _fileName + " failed :(");
     }
