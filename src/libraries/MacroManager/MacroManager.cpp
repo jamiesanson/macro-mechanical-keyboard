@@ -22,7 +22,7 @@ MacroManager::MacroManager(int cs, int cd) : _cs(cs), _cd(cd)
 
 void MacroManager::buttonPressed(String buttonName) 
 {
-    String _fileName = MACRO_DIR + buttonName + ".mac";
+    String _fileName = MACRO_DIR + buttonName + F(".mac");
 
     _fileName.toCharArray(_fileNameBuffer, FN_BUF_SIZE);
 
@@ -30,8 +30,13 @@ void MacroManager::buttonPressed(String buttonName)
 
     // Start the SD card if it exists
     if (_cardPresent && !_sdStarted) 
-    {
+    {   
         _sdStarted = beginSD();
+
+        if (!_sdStarted) {
+            // If the user inserts a card while the program is running, restart the device
+            WRITE_RESTART(0x5FA0004);
+        }
     }
 
     if (_sdStarted) {
@@ -52,7 +57,7 @@ void MacroManager::buttonPressed(String buttonName)
                 }
             }
         } else {
-            Serial.println("Opening: " + _fileName + " failed :(");
+            ERROR(F("File opening failed"));
         }
 
         _macro.close();
@@ -66,7 +71,7 @@ void MacroManager::updateCardState()
 
     if (!_cardPresent) {
         _sdStarted = false;
-    }
+    } 
 }
 
 bool MacroManager::beginSD()
@@ -81,13 +86,17 @@ void MacroManager::dispatchAction(Action action)
         case RAW_STRING:
             Keyboard.print(action.value);
             break;
+        case NEWLINE:
+            Keyboard.println("");
+            break;
         case MODIFIER_DOWN:
             break;
         case MODIFIER_UP:
             break;
         case DELAY:
+            delay(action.value.toInt());
             break;
         default:
-             Serial.println("ActionType: " + String(action.type) + "; ActionVal: " + String(action.value));
+            ERROR(F("Action type unsupported"));
     }   
 }

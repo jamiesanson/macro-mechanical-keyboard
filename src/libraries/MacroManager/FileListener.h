@@ -2,8 +2,8 @@
 
 #include "JsonListener.h"
 
-#define TYPE_KEY String("type")
-#define PAYLOAD_KEY String("payload")
+#define TYPE_KEY String(F("type"))
+#define PAYLOAD_KEY String(F("payload"))
 
 // Struct defining an action to dispatch
 struct Action {

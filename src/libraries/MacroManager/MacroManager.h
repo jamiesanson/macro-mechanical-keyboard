@@ -10,7 +10,6 @@
 #include <avr/pgmspace.h>
 #include <SD.h>
 #include <SPI.h>
-#include <utiliy/Sd2Card.h>
 
 #include "JsonStreamingParser.h"
 #include "JsonListener.h"
@@ -18,14 +17,23 @@
 
 #define SUPPRESS_UNUSED(param) (void)param 
 
-#define MACRO_DIR "/macros/"
+#define MACRO_DIR F("/macros/")
 
 #define FN_BUF_SIZE 20
+
+// Definitions for software restart
+#define RESTART_ADDR       0xE000ED0C
+#define READ_RESTART()     (*(volatile uint32_t *)RESTART_ADDR)
+#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
+
+// Definition for error handling
+#define ERROR(err) Serial.println(err)
 
 // Enum containing individual actions
 PROGMEM enum ActionType
 {
     RAW_STRING,
+    NEWLINE,
     MODIFIER_DOWN,
     MODIFIER_UP,
     DELAY
@@ -49,8 +57,6 @@ class MacroManager
       bool _cardPresent;
       bool _sdStarted = false;
 
-      Sd2Card card;
-
       char _fileNameBuffer[FN_BUF_SIZE];
 
       FileListener *_listener = new FileListener();
@@ -67,7 +73,7 @@ extern MacroManager *_macroManager;
 // ISR called when card is ejected to put in
 inline void onCardStateChanged() 
 {
-    delay(1);
+    delayMicroseconds(1);
     _macroManager->updateCardState();
 }
 
