@@ -9,6 +9,8 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <SD.h>
+#include <SPI.h>
+#include <utiliy/Sd2Card.h>
 
 #include "JsonStreamingParser.h"
 #include "JsonListener.h"
@@ -23,11 +25,10 @@
 // Enum containing individual actions
 PROGMEM enum ActionType
 {
-    DELAY,
+    RAW_STRING,
     MODIFIER_DOWN,
     MODIFIER_UP,
-    SINGLE_PRESS,
-    RAW_STRING
+    DELAY
 };
 
 class MacroManager
@@ -45,14 +46,17 @@ class MacroManager
       // Chip select and Chip detect pins
       int _cs, _cd;
 
-      bool _cardNotPresent;
+      bool _cardPresent;
+      bool _sdStarted = false;
+
+      Sd2Card card;
 
       char _fileNameBuffer[FN_BUF_SIZE];
 
       FileListener *_listener = new FileListener();
       JsonStreamingParser *_parser = new JsonStreamingParser();
 
-      void beginSD();
+      bool beginSD();
 
       void dispatchAction(Action action);
 };
@@ -63,6 +67,7 @@ extern MacroManager *_macroManager;
 // ISR called when card is ejected to put in
 inline void onCardStateChanged() 
 {
+    delay(1);
     _macroManager->updateCardState();
 }
 

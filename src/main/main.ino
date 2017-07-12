@@ -37,7 +37,6 @@ void loop() {
 }
 
 void onEvent(ButtonEvent event) {
-  Serial.println("Event: button number: " + String(event.number) + "; Event type: " + getEventTypeName(event.pressType));  
-  manager.buttonPressed(String(1));
+  manager.buttonPressed(event.number);
 }
 

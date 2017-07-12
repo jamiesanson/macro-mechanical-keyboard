@@ -7,7 +7,8 @@ void FileListener::whitespace(char c) {
 void FileListener::startDocument() {
 }
 
-void FileListener::key(String key) {
+void FileListener::key(String key) 
+{  
   _lastKey = key;
 }
 
